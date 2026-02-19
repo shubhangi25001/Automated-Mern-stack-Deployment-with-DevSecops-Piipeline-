@@ -1,39 +1,46 @@
 version: "3.8"
+
 services:
+
   mongodb:
-    container_name: mongo
-    image: mongo:latest
-    volumes:
-      - ./backend/data:/data
+    image: mongo:6
+    container_name: mern-mongodb
+    restart: always
     ports:
       - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mern-network
 
   backend:
-    container_name: backend
     build: ./backend
-    env_file:
-      - ./backend/.env.docker
+    container_name: mern-backend
+    restart: always
     ports:
       - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/mernapp
+      - NODE_ENV=production
     depends_on:
       - mongodb
+    networks:
+      - mern-network
 
   frontend:
-    container_name: frontend
     build: ./frontend
-    env_file:
-      - ./frontend/.env.docker
+    container_name: mern-frontend
+    restart: always
     ports:
-      - "5173:5173"
-
-  redis:
-    container_name: redis
-    restart: unless-stopped
-    image: redis:7.0.5-alpine 
-    expose:
-        - 6379
+      - "3000:3000"
     depends_on:
-      - mongodb
+      - backend
+    networks:
+      - mern-network
 
 volumes:
-  data:
+  mongo-data:
+
+networks:
+  mern-network:
+    driver: bridge
